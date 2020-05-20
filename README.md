@@ -14,16 +14,21 @@ Capital letters does not matter.
 
 ## Install
 pip install msgpack-rpc-python
+
 pip install airsim
+
 pip install pynput
 
 We are using pynput over keyboard since linux users have to run as sudo for keyboard to function.
+
 Since the pynput didn't have all the functionality I wanted, a wrapper is created to handle multiple key presses.
 
 
 ## Keyboard Control
 To enter keyboard control type kc in the terminal.
+
 Remember to arm and takeoff before entering the kc mode.
+
 Currently we are only supporting world space controlling, so the control will be independend on the direction the drone is facing.
 The drone space controlling will be supportet later.
 
