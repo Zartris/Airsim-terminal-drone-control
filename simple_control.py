@@ -1,8 +1,8 @@
-import airsim
 import pprint
-import cv2
+
+import airsim
 import numpy as np
-from pynput.keyboard import Key, Listener
+
 from KeyController import KeyController
 
 # Commands:
@@ -22,7 +22,10 @@ LEFT_FORCE = -1
 
 
 class SimpleTerminalController:
-    def __init__(self, verbatim=True, maxmin_velocity=4, drive_type=airsim.DrivetrainType.ForwardOnly):
+    def __init__(self,
+                 verbatim: bool = True,
+                 maxmin_velocity: float = 4,
+                 drive_type: airsim.DrivetrainType = airsim.DrivetrainType.ForwardOnly):
         # Should this class print to terminal
         self.verbatim = verbatim
         self.DriveType = drive_type
@@ -116,10 +119,10 @@ class SimpleTerminalController:
         self.client.armDisarm(False)
         self.client.reset()
 
-    def handle_key_pressed(self, keysToCheck: list, pressedKeys: list, current_vel: float) -> float:
+    def handle_key_pressed(self, keys_to_check: list, pressed_keys: list, current_vel: float) -> float:
         new_vel = current_vel
-        positive_axis_press = keysToCheck[0] in pressedKeys
-        negative_axis_press = keysToCheck[1] in pressedKeys
+        positive_axis_press = keys_to_check[0] in pressed_keys
+        negative_axis_press = keys_to_check[1] in pressed_keys
 
         if positive_axis_press and negative_axis_press:
             return new_vel
@@ -134,26 +137,24 @@ class SimpleTerminalController:
         return round(number=float(np.clip(new_vel * 0.75, - self.maxmin_vel, self.maxmin_vel)), ndigits=2)
 
     def enter_keyboard_control(self):
-        print("You entered the keyboard mode. Press 'b' to return.")
+        print("You entered the keyboard mode. Press 't' to return.")
         kc = KeyController()
         self.client.enableApiControl(True)
         while kc.thread.isAlive():
             self.client.cancelLastTask()
             self.client.enableApiControl(True)
             keys = kc.get_key_pressed()
-            # Keys explained: keys[0] is the positive axis (forward, right, down)
-            # keys[1] is the negative axis (backwards, left, up)
             quad_vel = self.client.getMultirotorState().kinematics_estimated.linear_velocity
-            self.vx = self.handle_key_pressed(keysToCheck=['w', 's'], pressedKeys=keys, current_vel=quad_vel.x_val)
-            self.vy = self.handle_key_pressed(keysToCheck=['d', 'a'], pressedKeys=keys, current_vel=quad_vel.y_val)
-            self.vz = self.handle_key_pressed(keysToCheck=['e', 'q'], pressedKeys=keys, current_vel=quad_vel.z_val)
+            self.vx = self.handle_key_pressed(keys_to_check=['w', 's'], pressed_keys=keys, current_vel=quad_vel.x_val)
+            self.vy = self.handle_key_pressed(keys_to_check=['d', 'a'], pressed_keys=keys, current_vel=quad_vel.y_val)
+            self.vz = self.handle_key_pressed(keys_to_check=['e', 'q'], pressed_keys=keys, current_vel=quad_vel.z_val)
             print("current: \n vx:{0}, nvx:{1}\n vy:{2}, nvy:{3}\n vz:{4}, nvz:{5}\n".format(quad_vel.x_val, self.vx,
                                                                                              quad_vel.y_val, self.vy,
                                                                                              quad_vel.z_val, self.vz))
             self.client.moveByVelocityAsync(self.vx, self.vy, self.vz, 0.1, airsim.DrivetrainType.ForwardOnly,
                                             airsim.YawMode(False, 0)).join()
             # airsim.time.sleep(0.2)
-        print("'b' has been pressed and the console control is back")
+        print("'t' has been pressed and the console control is back")
         self.client.hoverAsync().join()
 
     def print_stats(self):

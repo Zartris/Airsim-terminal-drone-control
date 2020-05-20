@@ -1,5 +1,6 @@
-from pynput.keyboard import Key, Listener, KeyCode
 from threading import Thread
+
+from pynput.keyboard import Listener, KeyCode
 
 
 class KeyController:
@@ -34,7 +35,7 @@ class KeyController:
     def stop(self):
         self.listener.stop()
 
-    def get_key_pressed(self):
+    def get_key_pressed(self) -> list:
         return self.key_pressed
 
 
