@@ -45,8 +45,9 @@ class SimpleTerminalController:
 
     def setup_segmentation_colors(self):
         # Finding regexp GameObject name and set the ID
-        success = self.client.simSetSegmentationObjectID("SM_Floor20m[\w]*", 100, True)
-        print("Change of color =", success)
+        # success = self.client.simSetSegmentationObjectID("SM_Floor20m[\w]*", 100, True)
+        # print("Change of color =", success)
+        pass
 
     def takeoff(self):
         state = self.client.getMultirotorState()
