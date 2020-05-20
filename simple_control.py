@@ -77,7 +77,8 @@ class SimpleTerminalController:
         self.client.enableApiControl(True)
         print("Move args:", float(args[1]), float(args[2]), float(args[3]), float(args[4]))
         self.client.moveToPositionAsync(x=float(args[1]), y=float(args[2]), z=float(args[3]),
-                                        velocity=float(args[4]), drivetrain=self.DriveType).join()
+                                        velocity=float(args[4]), drivetrain=airsim.DrivetrainType.ForwardOnly,
+                                        yaw_mode=airsim.YawMode(False, 0)).join()
         self.client.hoverAsync().join()
         print("Moved!")
 
