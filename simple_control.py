@@ -93,7 +93,7 @@ class SimpleTerminalController:
         self.change_color("BP_BuoyantActor", SHIP)
 
     def change_color(self, name, id):
-        success = self.client.simSetSegmentationObjectID(name + "[\w]*", id, True)
+        success = self.client.simSetSegmentationObjectID(name + r"[\w]*", id, True)
         print("Change of color on", name, "=", success)
 
     def takeoff(self):
@@ -235,7 +235,7 @@ class SimpleTerminalController:
         print("You entered the keyboard mode. Press 't' to return.")
         kc = KeyController()
         self.client.enableApiControl(True)
-        while kc.thread.isAlive():
+        while kc.thread.is_alive():
             self.client.cancelLastTask()
             self.client.enableApiControl(True)
             keys = kc.get_key_pressed()

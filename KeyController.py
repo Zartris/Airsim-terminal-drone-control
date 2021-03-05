@@ -41,5 +41,5 @@ class KeyController:
 
 if __name__ == '__main__':
     kc = KeyController()
-    while kc.thread.isAlive():
+    while kc.thread.is_alive():
         print(kc.get_key_pressed())
