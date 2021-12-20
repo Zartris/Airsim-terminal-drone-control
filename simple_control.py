@@ -1,4 +1,5 @@
 import pprint
+import string
 
 import airsim
 import numpy as np
@@ -11,6 +12,7 @@ from airsim_functions.orbit import OrbitNavigator
 TIMEOUT = 1200  # 20 miniuts
 
 # Mesh ID's
+BG = 0
 LAND = 100
 WATER = 200
 SHIP = 300
@@ -36,12 +38,14 @@ class SimpleTerminalController:
     def __init__(self,
                  verbatim: bool = True,
                  maxmin_velocity: float = 10,
-                 drive_type: airsim.DrivetrainType = airsim.DrivetrainType.ForwardOnly):
+                 drive_type: airsim.DrivetrainType = airsim.DrivetrainType.ForwardOnly,
+                 client: airsim.MultirotorClient = None):
         # Should this class print to terminal
         self.verbatim = verbatim
         self.DriveType = drive_type
-        # connect to the AirSim simulator
-        self.client = airsim.MultirotorClient()
+        self.client = client
+        if client is None:
+            self.client = airsim.MultirotorClient()
         self.confirm_connection()
         # Segmentation setup
         self.setup_segmentation_colors()
@@ -50,6 +54,7 @@ class SimpleTerminalController:
         self.vx = 0
         self.vy = 0
         self.vz = 0
+        self.yaw = 0
         self.nav = None
 
         self.maxmin_vel = maxmin_velocity
@@ -59,42 +64,22 @@ class SimpleTerminalController:
         self.client.enableApiControl(True)
 
     def setup_segmentation_colors(self):
-
-        # Finding regexp GameObject name and set the ID
-        # success = self.client.simSetSegmentationObjectID("SM_Floor20m[\w]*", 100, True)
-        # print("Change of color =", success)
-
-        self.change_color("SM_BGBoxBuildingFrame", LAND)
-        self.change_color("SM_BGPipe", LAND)
-        self.change_color("SM_BGSphereBuilding", LAND)
-        self.change_color("SM_BGStorage", LAND)
-        self.change_color("SM_Cable", LAND)
-        self.change_color("SM_Container", LAND)
-        self.change_color("SM_CraneBase", LAND)
-        self.change_color("SM_CraneWalkway", LAND)
-        self.change_color("SM_Fence", LAND)
-        self.change_color("SM_Light", LAND)
-        self.change_color("SM_Rails", LAND)
-        self.change_color("SM_Floor", LAND)
-        self.change_color("BP_AirLabGate", LAND)
-        self.change_color("Cube", LAND)
-
-        self.change_color("S_Water", WATER)
-        self.change_color("BP_Ocean", WATER)
-        self.change_color("BP_Foam", WATER)
-        self.change_color("BP_Foam_big", WATER)
-        self.change_color("BP_Foam_dif", WATER)
-
-        self.change_color("BP_BuoyantMeshBoat", SHIP)
-        self.change_color("BP_ManOfWar_no_cam", SHIP)
-        self.change_color("BP_Ship_bouyant", SHIP)
-        self.change_color("BP_Container_ship", SHIP)
-        self.change_color("BP_SK_Cargo_Ship", SHIP)
-        self.change_color("BP_BuoyantActor", SHIP)
+        """
+        Find all objects and make them one color
+        then find the specific objects and turn them into different colors.
+        :return:
+        """
+        self.set_bg_color(color_id=BG)
+        self.change_color("segment_gate", LAND)
 
     def change_color(self, name, id):
-        success = self.client.simSetSegmentationObjectID(name + r"[\w]*", id, True)
+        success = self.client.simSetSegmentationObjectID(name + "[\w]*", id, True)
         print("Change of color on", name, "=", success)
+
+    def set_bg_color(self, color_id):
+        alphabet = list(string.ascii_lowercase)
+        for letter in alphabet:
+            self.change_color(letter, color_id)
 
     def takeoff(self):
         state = self.client.getMultirotorState()
@@ -231,27 +216,66 @@ class SimpleTerminalController:
         # nothing is pressed, smoothly lowering the value
         return round(number=float(np.clip(new_vel * 0.75, - self.maxmin_vel, self.maxmin_vel)), ndigits=2)
 
+    @staticmethod
+    def handle_rotation(keys_to_check: list, pressed_keys: list) -> float:
+        positive_rotation_press = keys_to_check[0] in pressed_keys
+        negative_rotation_press = keys_to_check[1] in pressed_keys
+
+        if positive_rotation_press and negative_rotation_press:
+            return 0
+        if positive_rotation_press:
+            return 20
+        if negative_rotation_press:
+            return -20
+        return 0
+
+    @staticmethod
+    def handle_height(keys_to_check: list, pressed_keys: list, current_height: float) -> float:
+        positive_axis_press = keys_to_check[0] in pressed_keys
+        negative_axis_press = keys_to_check[1] in pressed_keys
+
+        if positive_axis_press and negative_axis_press:
+            return current_height
+        if positive_axis_press:
+            return current_height + 0.2
+        if negative_axis_press:
+            return current_height - 0.2
+        return current_height
+
     def enter_keyboard_control(self):
         print("You entered the keyboard mode. Press 't' to return.")
         kc = KeyController()
+        z = self.client.getMultirotorState().kinematics_estimated.position.z_val
         self.client.enableApiControl(True)
         while kc.listener.running:
             self.client.cancelLastTask()
             self.client.enableApiControl(True)
             keys = kc.get_key_pressed()
-            quad_vel = self.client.getMultirotorState().kinematics_estimated.linear_velocity
-            self.vx = self.handle_key_pressed(keys_to_check=['w', 's'], pressed_keys=keys, current_vel=quad_vel.x_val)
-            self.vy = self.handle_key_pressed(keys_to_check=['d', 'a'], pressed_keys=keys, current_vel=quad_vel.y_val)
-            self.vz = self.handle_key_pressed(keys_to_check=['e', 'q'], pressed_keys=keys, current_vel=quad_vel.z_val)
-            print(
-                "current vel: \n vx:{0}, nvx:{1}\n vy:{2}, nvy:{3}\n vz:{4}, nvz:{5}\n".format(quad_vel.x_val, self.vx,
-                                                                                               quad_vel.y_val, self.vy,
-                                                                                               quad_vel.z_val, self.vz))
-            current_pos = self.client.getMultirotorState().kinematics_estimated.position
-            print("current pos: \n x:{0}, y:{1}\n z:{2}\n".format(current_pos.x_val, current_pos.y_val,
-                                                                  current_pos.z_val))
-            self.client.moveByVelocityAsync(self.vx, self.vy, self.vz, 0.1, airsim.DrivetrainType.ForwardOnly,
-                                            airsim.YawMode(False, 0)).join()
+            if 'h' in keys:
+                self.client.hoverAsync()
+            else:
+                quad_vel = self.client.getMultirotorState().kinematics_estimated.linear_velocity
+                self.vx = self.handle_key_pressed(keys_to_check=['w', 's'], pressed_keys=keys,
+                                                  current_vel=quad_vel.x_val)
+                self.vy = self.handle_key_pressed(keys_to_check=['d', 'a'], pressed_keys=keys,
+                                                  current_vel=quad_vel.y_val)
+                z = self.handle_height(keys_to_check=['z', 'x'], pressed_keys=keys, current_height=z)
+                self.yaw = self.handle_rotation(keys_to_check=['e', 'q'], pressed_keys=keys)
+                print(
+                    "current vel: \n vx:{0}, nvx:{1}\n vy:{2}, nvy:{3}\n vz:{4}, nvz:{5}\n".format(quad_vel.x_val,
+                                                                                                   self.vx,
+                                                                                                   quad_vel.y_val,
+                                                                                                   self.vy,
+                                                                                                   quad_vel.z_val,
+                                                                                                   self.vz))
+                current_pos = self.client.getMultirotorState().kinematics_estimated.position
+                print("current pos: \n x:{0}, y:{1}\n z:{2}\n".format(current_pos.x_val, current_pos.y_val,
+                                                                      current_pos.z_val))
+
+                self.client.moveByVelocityZAsync(self.vx, self.vy, z, 0.1, airsim.DrivetrainType.MaxDegreeOfFreedom,
+                                                 airsim.YawMode(True, self.yaw)).join()
+            # self.client.moveByVelocityAsync(self.vx, self.vy, self.vz, 0.1, airsim.DrivetrainType.MaxDegreeOfFreedom,
+            #                                 airsim.YawMode(True, self.yaw)).join()
             # airsim.time.sleep(0.2)
         print("'t' has been pressed and the console control is back")
         self.client.hoverAsync().join()
