@@ -235,7 +235,7 @@ class SimpleTerminalController:
         print("You entered the keyboard mode. Press 't' to return.")
         kc = KeyController()
         self.client.enableApiControl(True)
-        while kc.thread.is_alive():
+        while kc.listener.running:
             self.client.cancelLastTask()
             self.client.enableApiControl(True)
             keys = kc.get_key_pressed()

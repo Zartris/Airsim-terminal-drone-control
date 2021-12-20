@@ -9,8 +9,9 @@ class KeyController:
             on_press=self.on_press,
             on_release=self.on_release)
         self.key_pressed = []
-        self.thread = Thread(target=self.run, args=())
-        self.thread.start()
+        # self.thread = Thread(target=self.run, args=())
+        # self.thread.start()
+        self.run()
 
     def on_press(self, key: KeyCode):
         # print('{0} release'.format(key))
@@ -28,9 +29,10 @@ class KeyController:
             return False
 
     def run(self):
-        with self.listener:
-            self.listener.join()
-        self.stop()
+        # with self.listener:
+        #     self.listener.join()
+        # self.stop()
+        self.listener.start()
 
     def stop(self):
         self.listener.stop()
@@ -41,5 +43,6 @@ class KeyController:
 
 if __name__ == '__main__':
     kc = KeyController()
-    while kc.thread.is_alive():
-        print(kc.get_key_pressed())
+    while kc.listener.running:
+        if kc.get_key_pressed() != []:
+            print(kc.get_key_pressed())
