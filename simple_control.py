@@ -8,10 +8,8 @@ import airsim
 import cv2 as cv
 import numpy as np
 
-from Data.UE4Data import convert_airsim_data
 from KeyController import KeyController
 # TIMEOUT
-from UE4_transformation import getImage
 from airsim_functions.orbit import OrbitNavigator
 
 TIMEOUT = 1200  # 20 miniuts
@@ -265,16 +263,16 @@ class SimpleTerminalController:
         kc = KeyController()
         z = self.client.getMultirotorState().kinematics_estimated.position.z_val
         self.client.enableApiControl(True)
-        while kc.thread.isAlive():
+        while kc.listener.running:
             if self.record:
                 self.client.simPause(True)
-                np_rgb_image = getImage(self.client)
-
-                drone_data = convert_airsim_data(self.client.simGetVehiclePose())
-                ship_data = convert_airsim_data(self.client.simGetObjectPose("BP_Container_ship2_2"))
-                d = {'drone': drone_data.to_dict(),
-                     'ship': ship_data.to_dict()}
-                self.save_data(d, np_rgb_image)
+                # np_rgb_image = getImage(self.client)
+                #
+                # drone_data = convert_airsim_data(self.client.simGetVehiclePose())
+                # ship_data = convert_airsim_data(self.client.simGetObjectPose("BP_Container_ship2_2"))
+                # d = {'drone': drone_data.to_dict(),
+                #      'ship': ship_data.to_dict()}
+                # self.save_data(d, np_rgb_image)
                 self.client.simPause(False)
 
             self.client.cancelLastTask()
