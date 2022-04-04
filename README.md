@@ -37,6 +37,8 @@ Control:
 - S = - x-axis
 - D = + y-axis
 - A = - y-axis
-- E = + z-axis (down)
-- Q = - z-axis (up)
+- X = + z-axis (down)
+- Z = - z-axis (up)
+- E = turn right
+- Q = turn left
 - T = Terminate kc mode
