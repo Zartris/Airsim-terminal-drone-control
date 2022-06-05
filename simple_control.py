@@ -3,6 +3,7 @@ import string
 
 import airsim
 import numpy as np
+from pynput.keyboard import KeyCode
 
 from KeyController import KeyController
 
@@ -201,8 +202,8 @@ class SimpleTerminalController:
 
     def handle_key_pressed(self, keys_to_check: list, pressed_keys: list, current_vel: float) -> float:
         new_vel = current_vel
-        positive_axis_press = keys_to_check[0] in pressed_keys
-        negative_axis_press = keys_to_check[1] in pressed_keys
+        positive_axis_press = KeyCode.from_char(keys_to_check[0]) in pressed_keys
+        negative_axis_press = KeyCode.from_char(keys_to_check[1]) in pressed_keys
 
         if positive_axis_press and negative_axis_press:
             return new_vel

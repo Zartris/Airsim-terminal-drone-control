@@ -1,5 +1,3 @@
-from threading import Thread
-
 from pynput.keyboard import Listener, KeyCode
 
 
@@ -9,29 +7,22 @@ class KeyController:
             on_press=self.on_press,
             on_release=self.on_release)
         self.key_pressed = []
-        # self.thread = Thread(target=self.run, args=())
-        # self.thread.start()
         self.run()
 
-    def on_press(self, key: KeyCode):
-        # print('{0} release'.format(key))
-        keychar = str(key).replace("\'", "").lower()
-        if keychar not in self.key_pressed:
-            self.key_pressed.append(keychar)
+    def on_press(self, key):
+        # print('{0} pressed'.format(key))
+        if key not in self.key_pressed:
+            self.key_pressed.append(key)
 
-    def on_release(self, key: KeyCode):
-        # print('{0} release'.format(key))
-        keychar = str(key).replace("\'", "").lower()
-        if keychar in self.key_pressed:
-            self.key_pressed.remove(keychar)
+    def on_release(self, key):
+        # print('{0} released'.format(key))
+        if key in self.key_pressed:
+            self.key_pressed.remove(key)
         if key == KeyCode.from_char('t'):
-            # Stop listenerd
+            self.listener.stop()
             return False
 
     def run(self):
-        # with self.listener:
-        #     self.listener.join()
-        # self.stop()
         self.listener.start()
 
     def stop(self):
@@ -45,4 +36,4 @@ if __name__ == '__main__':
     kc = KeyController()
     while kc.listener.running:
         if kc.get_key_pressed() != []:
-            print(kc.get_key_pressed())
+            print(kc.key_pressed)
