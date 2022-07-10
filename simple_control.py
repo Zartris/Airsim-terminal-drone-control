@@ -219,8 +219,8 @@ class SimpleTerminalController:
 
     @staticmethod
     def handle_rotation(keys_to_check: list, pressed_keys: list) -> float:
-        positive_rotation_press = keys_to_check[0] in pressed_keys
-        negative_rotation_press = keys_to_check[1] in pressed_keys
+        positive_rotation_press = KeyCode.from_char(keys_to_check[0]) in pressed_keys
+        negative_rotation_press = KeyCode.from_char(keys_to_check[1]) in pressed_keys
 
         if positive_rotation_press and negative_rotation_press:
             return 0
@@ -232,8 +232,8 @@ class SimpleTerminalController:
 
     @staticmethod
     def handle_height(keys_to_check: list, pressed_keys: list, current_height: float) -> float:
-        positive_axis_press = keys_to_check[0] in pressed_keys
-        negative_axis_press = keys_to_check[1] in pressed_keys
+        positive_axis_press = KeyCode.from_char(keys_to_check[0]) in pressed_keys
+        negative_axis_press = KeyCode.from_char(keys_to_check[1]) in pressed_keys
 
         if positive_axis_press and negative_axis_press:
             return current_height
